@@ -219,6 +219,7 @@ class ListaInventario:
                     return True
                 actual = actual.siguiente
         return False
+    
     def contar_productos(self):
         #"""Contar productos recorriendo directamente los nodos"""
         contador = 0
@@ -239,8 +240,6 @@ class ListaInventario:
             actual = actual.siguiente
         return False
         
-    
-
     def verificar_cantidad_articulo(self, nombre, cantidad):
         actual = self.primero
         while actual:

@@ -1,1 +1,2 @@
-
+id_registro,id_cliente,total,metodo_de_pago,fecha,estado
+21f76fa7-d2de-4d76-9e17-e33f309bbb47,e9dbff30-406c-4aed-a178-317709828ab4,200.0,Tarjeta,2025-09-03 23:00:53,Exitoso
