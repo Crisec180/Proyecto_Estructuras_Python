@@ -1,5 +1,7 @@
 import os
 import sys
+import webbrowser
+import time
 current_dir = os.path.dirname(os.path.abspath(__file__))
 clases_base_path = os.path.join(current_dir, "Clases_Base")
 sys.path.append(clases_base_path)
@@ -9,8 +11,10 @@ Proyecto_Estructuras_Python_path= os.path.join(current_dir,"Proyecto_Estructuras
 sys.path.append(Proyecto_Estructuras_Python_path)
 import uuid
 import customtkinter as ctk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 import tkinter as tk
+import threading
+import time
 from PIL import Image, ImageTk
 from Clases_Base.Cliente import Cliente
 from Estructuras.GestionClientes import GestionClientes
@@ -24,6 +28,193 @@ from Estructuras.GestionRegistros import Registros
 from Archivos.PersistenciaDatos import Archivo as file
 from tkinter import simpledialog
 from Clases_Base.Registro import Registro
+class AnimacionEnvio:
+    def __init__(self):
+        # RUTA CORREGIDA: El archivo está en la subcarpeta
+        self.html_file = os.path.join("Proyecto_Estructuras_Python", "Animacion_Envio.html")
+        
+        # Rutas alternativas por si acaso
+        self.rutas_alternativas = [
+            "Animacion_Envio.html",  # En directorio actual
+            os.path.join("Proyecto_Estructuras_Python", "Animacion_Envio.html"),  # En subcarpeta
+            os.path.join("..", "Animacion_Envio.html")  # En carpeta padre
+        ]
+    
+    def encontrar_archivo_html(self):
+        """Busca el archivo HTML en diferentes ubicaciones"""
+        for ruta in self.rutas_alternativas:
+            if os.path.exists(ruta):
+                print(f"Archivo encontrado en: {ruta}")
+                return ruta
+        
+        # Si no encuentra en las rutas predefinidas, buscar recursivamente
+        print("Buscando archivo HTML recursivamente...")
+        for root, dirs, files in os.walk("."):
+            for file in files:
+                if file == "Animacion_Envio.html":
+                    ruta_encontrada = os.path.join(root, file)
+                    print(f"Archivo encontrado recursivamente en: {ruta_encontrada}")
+                    return ruta_encontrada
+        
+        return None
+    
+    def crear_archivo_html_aqui(self):
+        """Crea el archivo HTML en el directorio actual"""
+        html_content = '''<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesando tu Pedido</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 3rem;
+            background: rgba(255,255,255,0.15);
+            border-radius: 25px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .title {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        .truck {
+            font-size: 6rem;
+            margin: 2rem 0;
+            animation: move 3s ease-in-out infinite;
+        }
+        .message {
+            font-size: 1.4rem;
+            margin: 1rem 0;
+            opacity: 0.9;
+        }
+        .progress {
+            width: 300px;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            margin: 2rem auto;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00cc66);
+            width: 0%;
+            animation: fill 5s ease-out forwards;
+        }
+        @keyframes glow {
+            0% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+            100% { text-shadow: 0 0 40px rgba(255,255,255,0.8); }
+        }
+        @keyframes move {
+            0%, 100% { transform: translateX(-20px); }
+            50% { transform: translateX(20px); }
+        }
+        @keyframes fill {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Pedido Procesado!</h1>
+        <div class="truck"></div>
+        <div class="message">Tu pedido esta en camino...</div>
+        <div class="progress">
+            <div class="progress-bar"></div>
+        </div>
+        <div class="message">Gracias por tu compra!</div>
+    </div>
+    <script>
+        setTimeout(() => {
+            document.querySelector('.title').textContent = 'Entregado!';
+            document.querySelector('.truck').textContent = '';
+            document.querySelector('.message').textContent = 'Pedido entregado exitosamente!';
+        }, 5000);
+    </script>
+</body>
+</html>'''
+        
+        try:
+            archivo_local = "Animacion_Envio.html"
+            with open(archivo_local, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            print(f"Archivo creado en: {os.path.abspath(archivo_local)}")
+            return archivo_local
+        except Exception as e:
+            print(f"Error al crear archivo: {e}")
+            return None
+    
+    def mostrar_animacion(self, cliente_nombre="Cliente", direccion=""):
+        """Muestra la animación de envío en el navegador"""
+        try:
+            print("=== BUSCANDO ARCHIVO HTML ===")
+            print(f"Directorio actual: {os.getcwd()}")
+            
+            # Buscar el archivo
+            archivo_encontrado = self.encontrar_archivo_html()
+            
+            if not archivo_encontrado:
+                print("Archivo no encontrado. Creando uno nuevo...")
+                archivo_encontrado = self.crear_archivo_html_aqui()
+                
+                if not archivo_encontrado:
+                    print("No se pudo crear el archivo HTML")
+                    return False
+            
+            # Verificar que el archivo tiene contenido
+            if os.path.getsize(archivo_encontrado) == 0:
+                print("Archivo vacio. Recreando...")
+                archivo_encontrado = self.crear_archivo_html_aqui()
+            
+            # Abrir en navegador
+            ruta_absoluta = os.path.abspath(archivo_encontrado)
+            # Convertir backslashes a forward slashes para URL
+            ruta_url = ruta_absoluta.replace('\\', '/')
+            file_path = f'file:///{ruta_url}'
+            
+            print(f"Archivo a abrir: {archivo_encontrado}")
+            print(f"Ruta absoluta: {ruta_absoluta}")
+            print(f"URL: {file_path}")
+            print(f"Cliente: {cliente_nombre}")
+            print(f"Direccion: {direccion}")
+            
+            webbrowser.open(file_path)
+            print("Navegador abierto exitosamente!")
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error: {e}")
+            return False
+
+# Función de prueba sin emojis problemáticos
+def probar_animacion_segura():
+    """Prueba la animación sin caracteres especiales problemáticos"""
+    print("=== PRUEBA DE ANIMACION ===")
+    
+    animacion = AnimacionEnvio()
+    resultado = animacion.mostrar_animacion("Juan Perez", "Calle 123, Ciudad")
+    
+    if resultado:
+        print("Animacion ejecutada correctamente!")
+    else:
+        print("Error en la animacion")
+    
+    return resultado
 class SistemaCompraModerno:
     def __init__(self):
         gestion_clientes, gestion_tarjetas, articulos, registros_lista = file.cargar_datos()
@@ -2335,6 +2526,22 @@ class SistemaCompraModerno:
                        )
                        self.registros.lista_registros.append(registro)
                        file.guardar_registros(self.registros)
+                       print(" ¡Pago exitoso! Mostrando animación de envío...")
+                       #animacion
+                       animacion = AnimacionEnvio()
+
+                       cliente_nombre = f"{self.usuario_actual.nombre} {self.usuario_actual.apellido}"
+                       cliente_direccion = getattr(self.usuario_actual, 'direccion', 'Dirección registrada')
+                       import threading
+                       def mostrar_animacion_async():
+                           animacion.mostrar_animacion(cliente_nombre, cliente_direccion)
+                
+                # Ejecutar animación en hilo separado
+                       hilo_animacion = threading.Thread(target=mostrar_animacion_async)
+                       hilo_animacion.daemon = True  # Se cierra cuando el programa principal se cierre
+                       hilo_animacion.start()
+                # FIN DE LA ANIMACIÓN 
+                
                   
                   # Resetear carrito
                        self.carrito = None
