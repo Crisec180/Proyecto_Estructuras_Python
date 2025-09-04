@@ -219,6 +219,7 @@ class ListaInventario:
                     return True
                 actual = actual.siguiente
         return False
+    
     def contar_productos(self):
         #"""Contar productos recorriendo directamente los nodos"""
         contador = 0
@@ -239,8 +240,6 @@ class ListaInventario:
             actual = actual.siguiente
         return False
         
-    
-
     def verificar_cantidad_articulo(self, nombre, cantidad):
         actual = self.primero
         while actual:
@@ -334,12 +333,14 @@ class ListaInventario:
            return datos
 
         mitad = len(datos) // 2
-        izquierda = self.merge_sort_datos(datos[:mitad])
-        derecha = self.merge_sort_datos(datos[mitad:])
-    
+        izquierda = self.merge_sort_datos(datos[:mitad]) #recursividad
+        derecha = self.merge_sort_datos(datos[mitad:])   #recursividad
+        #tambien se hace log(n)
+
         return self.merge_datos(izquierda, derecha)
 
     def merge_datos(self, izquierda, derecha):
+        #se hace una notacion n/2
         resultado = []
         i = j = 0
     

@@ -16,7 +16,6 @@ class GestionClientes:
     def cargar_clientes(self):
         self.clientes = file.cargar_clientes()
 
- 
     def guardar_clientes(self):
         file.guardar_clientes(self.clientes)
 
@@ -29,12 +28,12 @@ class GestionClientes:
         if len(id_str) > 10:
             return id_str[:8] + "..."
         return id_str
+    
     def registrar_cliente(self, nombre, id, password, apellido, telefono, correo, direccion_envio, fecha_registro):
-        
         for c in self.clientes:
             if c.id_cliente == id:  
                 return False
-        
+            
         nuevo_cliente = Cliente(
             nombre=nombre, 
             apellido=apellido, 
