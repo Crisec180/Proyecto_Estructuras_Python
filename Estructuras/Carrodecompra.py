@@ -62,7 +62,6 @@ class CarroDeCompra:
             }
             for item in self.items
         ]
-#clase donde van los articulos a comprar en primera estancia usariamos la pila aqui#
     def to_dict(self):
         return {
             "id_carrito": self.id_carrito,
