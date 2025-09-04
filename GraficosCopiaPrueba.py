@@ -846,26 +846,7 @@ class SistemaCompraModerno:
         else:
             self.carrito_label = ctk.CTkLabel(self.carrito_frame, text="Carrito vacío", font=ctk.CTkFont(size=14))
             self.carrito_label.pack(pady=10)
-
-    def procesar_pago(self):
-        """Procesar el pago del carrito actual"""
-        if not self.carrito or not self.carrito.items:
-            messagebox.showinfo("Pago", "El carrito está vacío.")
-            return
-        ProcesarPago(self.carrito).procesar_pago()
-        # Eliminar productos del inventario
-        for item in self.carrito.items:
-            nodo = next((n for n in self.inventario.pasar_a_lista_nodos(self.inventario) if n.dato.nombre == item["nombre"]), None)
-            if nodo:
-                for _ in range(item["cantidad"]):
-                    if nodo.pila.items:
-                        nodo.pila.items.pop()
-        messagebox.showinfo("Pago", "Pago procesado con éxito")
-        self.carrito = None
-        self.actualizar_carrito_vista()
-        self.cargar_productos_en_interfaz()  # Actualiza inventario en la interfaz
-       
-        
+         
     def mostrar_reportes(self):
             """Mostrar reportes del sistema"""
             self.limpiar_contenido()
@@ -2303,11 +2284,7 @@ class SistemaCompraModerno:
               if "✅" in resultado or "exitoso" in resultado.lower():
                   # Eliminar productos del inventario solo si el pago fue exitoso
                   for item in self.carrito.items:
-                      nodo = next(
-                          (n for n in self.inventario.pasar_a_lista_nodos(self.inventario)
-                           if n.dato.nombre == item["nombre"]),
-                          None
-                      )
+    self.inventario.eliminar_articulo(item["nombre"], item["cantidad"])
                       if nodo:
                           for _ in range(item["cantidad"]):
                               if nodo.pila.items:
