@@ -155,48 +155,68 @@ class ListaInventario:
     
     #este metodo esta hecho para que solo elimine despues de completar con exito la compra
     def eliminar_articulo(self, nombre, cantidad=None):
-        """
-        Elimina un artículo del inventario.
-        Si no se especifica cantidad, elimina el nodo completo.
-        Si se especifica cantidad, elimina esa cantidad de la pila.
-        Retorna True si se elimina exitosamente, False si no se encuentra.
-        """
-        actual = self.primero
-        while actual:
-            if actual.dato.nombre.lower().strip() == nombre.lower().strip():
-                if cantidad is None:
-                    # Eliminar nodo completo
+       """Elimina un artículo del inventario.
+          Si no se especifica cantidad, elimina el nodo completo.
+          Si se especifica cantidad, elimina esa cantidad de la pila.
+        Retorna True si se elimina exitosamente, False si no se encuentra."""
+                                                                    
+       actual = self.primero
+       while actual:
+           if actual.dato.nombre.lower().strip() == nombre.lower().strip():
+               if cantidad is None:
                     if actual.anterior:
                         actual.anterior.siguiente = actual.siguiente
                     else:
                         self.primero = actual.siguiente
-                    
+                
                     if actual.siguiente:
                         actual.siguiente.anterior = actual.anterior
                     else:
                         self.ultimo = actual.anterior
-                    
+                
+                    print(f"DEBUG - Nodo eliminado completamente: {nombre}")
                     return True
-                else:
-                    # Eliminar cantidad específica
+               else:
+                # Eliminar cantidad específica
+                    stock_inicial = len(actual.pila.items)
+                    print(f"DEBUG - {nombre}: Stock inicial = {stock_inicial}")
+                    print(f"DEBUG - Cantidad a eliminar solicitada = {cantidad}")
+                
+                # Validar que hay suficiente stock
+                    if cantidad > stock_inicial:
+                         print(f"DEBUG - ERROR: No hay suficiente stock. Stock: {stock_inicial}, Solicitado: {cantidad}")
+                         return False
+                
+                # Eliminar la cantidad solicitada
+                    cantidad_eliminada = 0
                     for _ in range(min(cantidad, len(actual.pila.items))):
-                        actual.pila.desapilar()
-                    
+                        if actual.pila.items:  # Verificar que aún hay items
+                            actual.pila.desapilar()
+                            cantidad_eliminada += 1
+                
+                    stock_final = len(actual.pila.items)
+                    print(f"DEBUG - {nombre}: Cantidad eliminada = {cantidad_eliminada}")
+                    print(f"DEBUG - {nombre}: Stock final = {stock_final}")
+                
+                # Si la pila quedó vacía, eliminar el nodo completo
                     if not actual.pila.items:
-                        # Si la pila está vacía, eliminar el nodo
-                        if actual.anterior:
-                            actual.anterior.siguiente = actual.siguiente
-                        else:
-                            self.primero = actual.siguiente
-                        
-                        if actual.siguiente:
-                            actual.siguiente.anterior = actual.anterior
-                        else:
-                            self.ultimo = actual.anterior
+                         print(f"DEBUG - {nombre}: Pila vacía, eliminando nodo completo")
+                         if actual.anterior:
+                             actual.anterior.siguiente = actual.siguiente
+                         else:
+                             self.primero = actual.siguiente
                     
+                         if actual.siguiente:
+                             actual.siguiente.anterior = actual.anterior
+                         else:
+                             self.ultimo = actual.anterior
+                
                     return True
-            actual = actual.siguiente
-        return False
+        
+           actual = actual.siguiente
+    
+       print(f"DEBUG - ERROR: Producto '{nombre}' no encontrado en inventario")
+       return False
     
     def eliminar_uno(self, nombre):
         actual = self.primero

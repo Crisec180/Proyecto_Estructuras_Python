@@ -692,16 +692,37 @@ class SistemaCompraModerno:
          messagebox.showerror("Error", f"Error al agregar producto: {str(e)}")
          print(f"Error detallado: {e}")
     def actualizar_vista_inventario(self):
-      """Actualizar la vista del inventario después de agregar un producto"""
-      try:
-        # Si estamos en la vista de inventario, recargar los productos
-          if hasattr(self, 'productos_frame') and self.productos_frame.winfo_exists():
-             self.cargar_productos_en_interfaz()
-             print("Vista de inventario actualizada correctamente")
-          else:
-             print("No hay vista de inventario activa para actualizar")
-      except Exception as e:
-         print(f"Error al actualizar vista de inventario: {e}")     
+       """Actualizar la vista del inventario después de agregar/eliminar un producto"""
+       try:
+        # Verificar si estamos en la vista de inventario
+           if hasattr(self, 'productos_frame'):
+               try:
+                # Verificar si el frame existe y es válido
+                   if self.productos_frame.winfo_exists():
+                       print("Actualizando vista de inventario...")
+                    # Recargar los productos en la interfaz
+                       self.cargar_productos_en_interfaz()
+                    
+                    # Forzar actualización visual
+                       self.productos_frame.update_idletasks()
+                       if hasattr(self, 'content_frame'):
+                           self.content_frame.update_idletasks()
+                    
+                       print("Vista de inventario actualizada correctamente")
+                       return True
+                   else:
+                        print("El frame de productos no existe o no es válido")
+                        return False
+               except Exception as inner_e:
+                   print(f"Error al verificar productos_frame: {inner_e}")
+                   return False
+           else:
+               print("No hay frame de productos (productos_frame) disponible")
+               return False
+            
+       except Exception as e:
+           print(f"Error al actualizar vista de inventario: {e}")
+           return False  
  
     def editar_producto(self, articulo):
       """Editar un producto existente"""
@@ -2279,35 +2300,64 @@ class SistemaCompraModerno:
               )
 
               print(f"DEBUG - Resultado del pago: {resultado}")
+              resultado_lower = resultado.lower()
+              pago_exitoso = ("✅" in resultado or 
+                       "exitoso" in resultado_lower or 
+                       "éxito" in resultado_lower or 
+                       "realizado con" in resultado_lower)
 
               # Si el pago fue exitoso (verificar si contiene símbolo de éxito)
-              if "✅" in resultado or "exitoso" in resultado.lower():
+              if pago_exitoso:
+                  print("DEBUG - Pago exitoso, eliminando productos del inventario...")
+                  productos_eliminados_correctamente = True
                   # Eliminar productos del inventario solo si el pago fue exitoso
                   for item in self.carrito.items:
-    self.inventario.eliminar_articulo(item["nombre"], item["cantidad"])
-                      if nodo:
-                          for _ in range(item["cantidad"]):
-                              if nodo.pila.items:
-                                  nodo.pila.items.pop()
-                  registro = Registro(
-                     cliente = self.usuario_actual,
-                     total = self.carrito.calcular_total(),
-                     metodoDePago="Tarjeta",
-                     estado = "Exitoso"
-                  )
-                  self.registros.lista_registros.append(registro)
-                  file.guardar_registros(self.registros)
+                      
+                      nombre_producto = item["nombre"]
+                      cantidad_a_eliminar = item["cantidad"]
+                
+                      print(f"DEBUG - Eliminando {cantidad_a_eliminar} unidades de {nombre_producto}")
+                
+                # Usar el método eliminar_articulo 
+                      resultado_eliminacion = self.inventario.eliminar_articulo(nombre_producto, cantidad_a_eliminar)
+                
+                      if resultado_eliminacion:
+                       print(f"DEBUG - Eliminación exitosa de {cantidad_a_eliminar} unidades de {nombre_producto}")
+                      else:
+                       print(f"DEBUG - ERROR: No se pudo eliminar {nombre_producto}")
+                       productos_eliminados_correctamente=False
+                  if productos_eliminados_correctamente:        
+                       registro = Registro(
+                         cliente = self.usuario_actual,
+                         total = self.carrito.calcular_total(),
+                         metodoDePago="Tarjeta",
+                         estado = "Exitoso"
+                       )
+                       self.registros.lista_registros.append(registro)
+                       file.guardar_registros(self.registros)
                   
                   # Resetear carrito
-                  self.carrito = None
-                  self.actualizar_carrito_vista()
-                  self.cargar_productos_en_interfaz()
-                  
-              # Mostrar resultado del pago
-              if "❌" in resultado or "error" in resultado.lower():
-                  messagebox.showerror("Error de pago", resultado)
-              else:
-                  messagebox.showinfo("Pago", resultado)
+                       self.carrito = None
+                       try:
+                         self.actualizar_carrito_vista()
+                       except:
+                          pass
+                       try:
+                        self.cargar_productos_en_interfaz()
+                       except:
+                          pass
+                       try:
+                        self.actualizar_vista_inventario()
+                       except:
+                          pass
+                       messagebox.showinfo("Pago Exitoso", "Pago procesado correctamente y productos actualizados.")
+                  else:    
+                       messagebox.showwarning("Advertencia", "El pago fue exitoso pero hubo problemas al actualizar el inventario.")
+              else:# Mostrar resultado del pago
+                  if "❌" in resultado or "error" in resultado.lower():
+                      messagebox.showerror("Error de pago", resultado)
+                  else:
+                      messagebox.showinfo("Pago", resultado)
 
           except Exception as e:
               print(f"DEBUG - Excepción: {str(e)}")
