@@ -148,12 +148,13 @@ class SistemaCompraModerno:
         
         total_productos=self.inventario.contar_productos()
         total_clientes = len(self.gestion_clientes.clientes)
+        total_ventas=self.calcular_ventas_hoy()
         stats_frame = ctk.CTkFrame(welcome_frame)
         stats_frame.pack(pady=40, padx=40, fill="x")
         stats_frame.grid_columnconfigure((0, 1, 2), weight=1)
         self.crear_stat_card(stats_frame, "👥", "Clientes", str(total_clientes), 0, 0)
         self.crear_stat_card(stats_frame, "📦", "Productos", str(total_productos), 0, 1)
-        self.crear_stat_card(stats_frame, "💰", "Ventas Hoy", "$0", 0, 2)
+        self.crear_stat_card(stats_frame, "💰", "Ventas Hoy", f"${total_ventas}", 0, 2)
         quick_access_frame = ctk.CTkFrame(welcome_frame)
         quick_access_frame.pack(pady=20, padx=40, fill="x")
         
@@ -2267,7 +2268,7 @@ class SistemaCompraModerno:
           if not self.carrito or not self.carrito.items:
               messagebox.showinfo("Pago", "El carrito está vacío.")
               return
-
+          
           # Pedir datos al usuario
           numero = simpledialog.askstring("Pago", "Ingrese número de tarjeta:")
           if not numero:
@@ -2319,11 +2320,12 @@ class SistemaCompraModerno:
                   )
                   self.registros.lista_registros.append(registro)
                   file.guardar_registros(self.registros)
+                  
                   # Resetear carrito
                   self.carrito = None
                   self.actualizar_carrito_vista()
                   self.cargar_productos_en_interfaz()
-
+                  
               # Mostrar resultado del pago
               if "❌" in resultado or "error" in resultado.lower():
                   messagebox.showerror("Error de pago", resultado)
@@ -2333,7 +2335,24 @@ class SistemaCompraModerno:
           except Exception as e:
               print(f"DEBUG - Excepción: {str(e)}")
               messagebox.showerror("Error de pago", f"Error inesperado: {str(e)}")
-      
+    def calcular_ventas_hoy(self):
+      """Calcular las ventas del día actual basándose en los registros"""
+      from datetime import datetime
+    
+      fecha_hoy = datetime.now().strftime("%Y-%m-%d")
+      total_ventas_hoy = 0.0
+    
+    # Verificar que existen registros
+      if hasattr(self.registros, 'lista_registros') and self.registros.lista_registros:
+         for registro in self.registros.lista_registros:
+             # Verificar que el registro tiene los atributos necesarios
+             if hasattr(registro, 'fecha') and hasattr(registro, 'total') and hasattr(registro, 'estado'):
+                 # Comprobar si es del día de hoy y si fue exitoso
+                 registro_fecha = str(registro.fecha)
+                 if fecha_hoy in registro_fecha and registro.estado.lower() == "exitoso":
+                    total_ventas_hoy += registro.total
+    
+      return total_ventas_hoy 
 
     def salir_aplicacion(self):
         """Confirmar y salir de la aplicación"""
